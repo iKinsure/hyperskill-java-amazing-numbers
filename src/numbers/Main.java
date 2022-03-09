@@ -1,45 +1,90 @@
 package numbers;
 
+import java.util.List;
 import java.util.Scanner;
+import java.util.stream.Collectors;
+import java.util.stream.LongStream;
 
 public class Main {
 
-    public final Scanner scanner = new Scanner(System.in);
-
     public static void main(String[] args) {
-        Main main = new Main();
 
-        System.out.println("Enter a natural number:");
+        Scanner scanner = new Scanner(System.in);
+        List<Property> properties = List.of(
+                new Property("buzz", n -> n % 10L == 7L || n % 7L == 0L),
+                new Property("duck", n -> String.valueOf(n).contains("0")),
+                new Property("palindromic", n -> new StringBuilder(
+                        String.valueOf(n)).reverse().toString().equals(String.valueOf(n))),
+                new Property("gapful", (n) -> {
+                    String num = String.valueOf(n);
+                    if (num.length() < 3) {
+                        return false;
+                    }
+                    return n % Long.parseLong(num.charAt(0) + num.substring(num.length() - 1)) == 0L;
+                }),
+                new Property("even", n -> n % 2L == 0L),
+                new Property("odd", n -> n % 2L != 0L)
+        );
 
-        int a = main.scanner.nextInt();
-        if (a <= 0) {
-            System.out.println("This number is not natural!");
-            return;
+        System.out.println("Welcome to Amazing Numbers!\n" +
+                "\n" +
+                "Supported requests:\n" +
+                "- enter a natural number to know its properties;\n" +
+                "- enter two natural numbers to obtain the properties of the list:\n" +
+                "  * the first parameter represents a starting number;\n" +
+                "  * the second parameter shows how many consecutive numbers are to be processed;\n" +
+                "- separate the parameters with one space;\n" +
+                "- enter 0 to exit.\n");
+
+        while (true) {
+
+            System.out.print("Enter a request: ");
+            String[] input = scanner.nextLine().split("\\s");
+            System.out.println();
+
+            if (input.length == 1) {
+
+                long a = Long.parseLong(input[0]);
+
+                if (a == 0L) {
+                    System.out.println("Goodbye!");
+                    return;
+                }
+                if (a < 0L) {
+                    System.out.println("The first parameter should be a natural number or zero");
+                    continue;
+                }
+
+                System.out.println("Properties of " + a);
+                properties.forEach(property -> property.print(a));
+
+
+            } else {
+
+                long a = Long.parseLong(input[0]);
+                long b = Long.parseLong(input[1]);
+
+                if (a < 0L) {
+                    System.out.println("The first parameter should be a natural number or zero");
+                    continue;
+                }
+                if (b <= 0L) {
+                    System.out.println("The second parameter should be a natural number");
+                    continue;
+                }
+
+                LongStream.range(a, a + b).forEach(n -> {
+                    String result = properties.stream()
+                            .filter(property -> property.getChecker().check(n))
+                            .map(Property::getName)
+                            .collect(Collectors.joining(", "));
+                    System.out.println(n + " is " + result);
+
+                });
+
+            }
+
+
         }
-
-        boolean isEven = a % 2 == 0;
-        System.out.println("This number is " + (isEven ? "Even" : "Odd") + ".");
-
-        boolean endsWith7 = a % 10 == 7;
-        boolean isDivisibleBy7 = a % 7 == 0;
-
-        if (endsWith7 && isDivisibleBy7) {
-            System.out.println("It is a Buzz number.");
-            System.out.println("Explanation:");
-            System.out.printf("%d is divisible by 7 and ends with 7.%n", a);
-        } else if (isDivisibleBy7) {
-            System.out.println("It is a Buzz number.");
-            System.out.println("Explanation:");
-            System.out.printf("%d is divisible by 7.%n", a);
-        } else if (endsWith7) {
-            System.out.println("It is a Buzz number.");
-            System.out.println("Explanation:");
-            System.out.printf("%d ends with 7.%n", a);
-        } else {
-            System.out.println("It is not a Buzz number.");
-            System.out.println("Explanation:");
-            System.out.printf("%d is neither divisible by 7 nor does it end with 7.%n", a);
-        }
-
     }
 }
