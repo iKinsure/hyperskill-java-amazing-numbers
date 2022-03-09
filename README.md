@@ -1,0 +1,1 @@
+hyperskill-amazing-numbers
