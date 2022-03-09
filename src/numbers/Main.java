@@ -11,19 +11,17 @@ public class Main {
 
         Scanner scanner = new Scanner(System.in);
         List<Property> properties = List.of(
-                new Property("buzz", n -> n % 10L == 7L || n % 7L == 0L),
-                new Property("duck", n -> String.valueOf(n).contains("0")),
-                new Property("palindromic", n -> new StringBuilder(
+                Property.of("buzz", n -> n % 10L == 7L || n % 7L == 0L),
+                Property.of("duck", n -> String.valueOf(n).contains("0")),
+                Property.of("palindromic", n -> new StringBuilder(
                         String.valueOf(n)).reverse().toString().equals(String.valueOf(n))),
-                new Property("gapful", (n) -> {
+                Property.of("gapful", (n) -> {
                     String num = String.valueOf(n);
-                    if (num.length() < 3) {
-                        return false;
-                    }
-                    return n % Long.parseLong(num.charAt(0) + num.substring(num.length() - 1)) == 0L;
+                    return num.length() >= 3 &&
+                            n % Long.parseLong(num.charAt(0) + num.substring(num.length() - 1)) == 0;
                 }),
-                new Property("even", n -> n % 2L == 0L),
-                new Property("odd", n -> n % 2L != 0L)
+                Property.of("even", n -> n % 2L == 0L),
+                Property.of("odd", n -> n % 2L != 0L)
         );
 
         System.out.println("Welcome to Amazing Numbers!\n" +
@@ -42,9 +40,8 @@ public class Main {
             String[] input = scanner.nextLine().split("\\s");
             System.out.println();
 
+            long a = Long.parseLong(input[0]);
             if (input.length == 1) {
-
-                long a = Long.parseLong(input[0]);
 
                 if (a == 0L) {
                     System.out.println("Goodbye!");
@@ -61,7 +58,6 @@ public class Main {
 
             } else {
 
-                long a = Long.parseLong(input[0]);
                 long b = Long.parseLong(input[1]);
 
                 if (a < 0L) {
@@ -73,15 +69,7 @@ public class Main {
                     continue;
                 }
 
-                LongStream.range(a, a + b).forEach(n -> {
-                    String result = properties.stream()
-                            .filter(property -> property.getChecker().check(n))
-                            .map(Property::getName)
-                            .collect(Collectors.joining(", "));
-                    System.out.println(n + " is " + result);
-
-                });
-
+                Property.print(a, b, properties);
             }
 
 
