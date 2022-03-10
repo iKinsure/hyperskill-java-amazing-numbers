@@ -2,7 +2,6 @@ package numbers;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.LongStream;
 import java.util.stream.Stream;
@@ -30,6 +29,17 @@ public enum Property {
     SUNNY(n -> {
         double square = Math.sqrt(n + 1L);
         return square - Math.floor(square) == 0;
+    }),
+    JUMPING(n -> {
+        String nStr = String.valueOf(n);
+        for (int i = 1; i < nStr.length(); i++) {
+            int firstDigit = nStr.charAt(i - 1) - '0';
+            int nextDigit = nStr.charAt(i) - '0';
+            if (Math.abs(firstDigit - nextDigit) != 1) {
+                return false;
+            }
+        }
+        return true;
     }),
     EVEN(n -> n % 2L == 0L),
     ODD(n -> n % 2L != 0L);
@@ -83,13 +93,7 @@ public enum Property {
                 List.of(SUNNY, SQUARE)
         );
         return exclusiveProperties.stream()
-                .map(exc -> {
-                    if (properties.containsAll(exc)) {
-                        return exc;
-                    }
-                    return null;
-                })
-                .filter(Objects::nonNull)
+                .filter(properties::containsAll)
                 .collect(Collectors.toList());
     }
 
