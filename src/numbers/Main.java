@@ -1,36 +1,21 @@
 package numbers;
 
-import java.util.List;
+import java.util.Arrays;
 import java.util.Scanner;
-import java.util.stream.Collectors;
-import java.util.stream.LongStream;
 
 public class Main {
 
     public static void main(String[] args) {
 
         Scanner scanner = new Scanner(System.in);
-        List<Property> properties = List.of(
-                Property.of("buzz", n -> n % 10L == 7L || n % 7L == 0L),
-                Property.of("duck", n -> String.valueOf(n).contains("0")),
-                Property.of("palindromic", n -> new StringBuilder(
-                        String.valueOf(n)).reverse().toString().equals(String.valueOf(n))),
-                Property.of("gapful", (n) -> {
-                    String num = String.valueOf(n);
-                    return num.length() >= 3 &&
-                            n % Long.parseLong(num.charAt(0) + num.substring(num.length() - 1)) == 0;
-                }),
-                Property.of("even", n -> n % 2L == 0L),
-                Property.of("odd", n -> n % 2L != 0L)
-        );
-
         System.out.println("Welcome to Amazing Numbers!\n" +
                 "\n" +
                 "Supported requests:\n" +
                 "- enter a natural number to know its properties;\n" +
                 "- enter two natural numbers to obtain the properties of the list:\n" +
                 "  * the first parameter represents a starting number;\n" +
-                "  * the second parameter shows how many consecutive numbers are to be processed;\n" +
+                "  * the second parameters show how many consecutive numbers are to be processed;\n" +
+                "- two natural numbers and a property to search for;\n" +
                 "- separate the parameters with one space;\n" +
                 "- enter 0 to exit.\n");
 
@@ -53,10 +38,9 @@ public class Main {
                 }
 
                 System.out.println("Properties of " + a);
-                properties.forEach(property -> property.print(a));
+                Property.stream().forEachOrdered(property -> property.print(a));
 
-
-            } else {
+            } else if (input.length == 2) {
 
                 long b = Long.parseLong(input[1]);
 
@@ -69,7 +53,24 @@ public class Main {
                     continue;
                 }
 
-                Property.print(a, b, properties);
+                Property.print(a, b);
+
+            } else if (input.length == 3) {
+
+                long b = Long.parseLong(input[1]);
+                String propertyName = input[2].toUpperCase();
+
+                try {
+
+                    Property property = Property.valueOf(propertyName);
+                    Property.print(a, b, property);
+
+                } catch (Exception e) {
+                    System.out.printf("The property [%s] is wrong.%n", propertyName);
+                    System.out.println("Available properties: " + Arrays.toString(Property.values()));
+                }
+
+
             }
 
 
