@@ -17,8 +17,9 @@ public class Main {
                 "  * the first parameter represents a starting number;\n" +
                 "  * the second parameter shows how many consecutive numbers are to be processed;\n" +
                 "- two natural numbers and properties to search for;\n" +
+                "- a property preceded by minus must not be present in numbers;\n" +
                 "- separate the parameters with one space;\n" +
-                "- enter 0 to exit.\n");
+                "- enter 0 to exit.\n\n");
 
         while (true) {
 
@@ -60,36 +61,53 @@ public class Main {
 
                 long b = Long.parseLong(input[1]);
 
-                List<String> failedList = new ArrayList<>();
-                List<Property> properties = IntStream.range(2, input.length)
+                Set<Property> containedProperties = new HashSet<>();
+                Set<Property> ignoredProperties = new HashSet<>();
+                Set<String> failedProperties = IntStream.range(2, input.length)
                         .mapToObj(i -> input[i].toUpperCase())
                         .map(s -> {
                             try {
-                                return Property.valueOf(s);
+                                if (s.startsWith("-")) {
+                                    ignoredProperties.add(Property.valueOf(s.substring(1)));
+                                } else {
+                                    containedProperties.add(Property.valueOf(s));
+                                }
                             } catch (Exception e) {
-                                failedList.add(s);
+                                return s;
                             }
                             return null;
                         })
                         .filter(Objects::nonNull)
-                        .collect(Collectors.toList());
+                        .collect(Collectors.toSet());
 
 
-                if (failedList.isEmpty()) {
+                if (failedProperties.isEmpty()) {
 
-                    var validation = Property.validate(properties);
-                    if (validation.isEmpty()) {
-                        Property.print(a, b, properties);
+                    var validation1 = Property.validate(containedProperties);
+                    var validation2 = Property.validate(ignoredProperties);
+                    boolean intersection = containedProperties.stream()
+                            .anyMatch(ignoredProperties::contains);
+
+                    if (validation1.isEmpty() && validation2.isEmpty() && !intersection) {
+                        Property.print(a, b, containedProperties, ignoredProperties);
                     } else {
-                        System.out.println("The request contains mutually exclusive properties: " + validation);
+                        var str1 = validation1.stream()
+                                .map(Object::toString)
+                                .collect(Collectors.joining(", "));
+                        var str2 = validation2.stream()
+                                .map(set -> "[" + set.stream()
+                                        .map(s -> "-" + s.name().toUpperCase())
+                                        .collect(Collectors.joining(", ")) + "]")
+                                .collect(Collectors.joining(", "));
+                        System.out.println("The request contains mutually exclusive properties: " + str1 + str2);
                     }
 
                 } else {
-                    if (failedList.size() == 1) {
-                        System.out.printf("The property [%s] is wrong.%n", failedList);
+                    if (failedProperties.size() == 1) {
+                        System.out.printf("The property [%s] is wrong.%n", failedProperties);
 
                     } else {
-                        System.out.printf("The properties [%s] are wrong.%n", failedList);
+                        System.out.printf("The properties [%s] are wrong.%n", failedProperties);
                     }
                     System.out.println("Available properties: " + Arrays.toString(Property.values()));
                 }

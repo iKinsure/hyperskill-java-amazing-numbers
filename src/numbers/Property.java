@@ -1,48 +1,25 @@
 package numbers;
 
 import java.util.Arrays;
-import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.LongStream;
 import java.util.stream.Stream;
 
 public enum Property {
 
-    BUZZ(n -> n % 10L == 7L || n % 7L == 0L),
-    DUCK(n -> String.valueOf(n).contains("0")),
-    PALINDROMIC(n -> new StringBuilder(String.valueOf(n)).reverse().toString().equals(String.valueOf(n))),
-    GAPFUL((n) -> {
-        String nStr = String.valueOf(n);
-        return nStr.length() >= 3 &&
-                n % Long.parseLong(nStr.charAt(0) + nStr.substring(nStr.length() - 1)) == 0;
-    }),
-    SPY(n -> {
-        String nStr = String.valueOf(n);
-        int resultSum = nStr.chars().reduce(0, (sum, v) -> sum + (v - '0'));
-        int resultProduct = nStr.chars().reduce(1, (product, v) -> product * (v - '0'));
-        return resultSum == resultProduct;
-    }),
-    SQUARE(n -> {
-        double square = Math.sqrt(n);
-        return square - Math.floor(square) == 0;
-    }),
-    SUNNY(n -> {
-        double square = Math.sqrt(n + 1L);
-        return square - Math.floor(square) == 0;
-    }),
-    JUMPING(n -> {
-        String nStr = String.valueOf(n);
-        for (int i = 1; i < nStr.length(); i++) {
-            int firstDigit = nStr.charAt(i - 1) - '0';
-            int nextDigit = nStr.charAt(i) - '0';
-            if (Math.abs(firstDigit - nextDigit) != 1) {
-                return false;
-            }
-        }
-        return true;
-    }),
-    EVEN(n -> n % 2L == 0L),
-    ODD(n -> n % 2L != 0L);
+    BUZZ(Algorithms::isBuzz),
+    DUCK(Algorithms::isDuck),
+    PALINDROMIC(Algorithms::isPalindromic),
+    GAPFUL(Algorithms::isGapful),
+    SPY(Algorithms::isSpy),
+    SQUARE(Algorithms::isSquare),
+    SUNNY(n -> Algorithms.isSquare(n + 1L)),
+    JUMPING(Algorithms::isJumping),
+    HAPPY(Algorithms::isHappy),
+    SAD(n -> !Algorithms.isHappy(n)),
+    EVEN(Algorithms::isEven),
+    ODD(n -> !Algorithms.isEven(n));
 
     private final Checker checker;
 
@@ -64,19 +41,28 @@ public enum Property {
         System.out.println(result);
     }
 
-    public static void print(long a, long b, List<Property> properties) {
-        String result = LongStream.iterate(a, i -> i + 1)
-                .filter(n -> Property.stream()
-                        .filter(p -> p.checker.check(n))
-                        .collect(Collectors.toList())
-                        .containsAll(properties))
-                .limit(b)
-                .mapToObj(n -> n + " is " + Property.stream()
-                        .filter(p -> p.checker.check(n))
-                        .map(p -> p.name().toLowerCase())
-                        .collect(Collectors.joining(", ")))
-                .collect(Collectors.joining("\n"));
-        System.out.println(result);
+    public static void print(long a, long b, Set<Property> containedProperties, Set<Property> ignoredProperties) {
+        long counter = 0L;
+        while (counter < b) {
+
+            long finalA = a;
+            Set<Property> numberProperties = Property.stream()
+                    .filter(p -> p.checker.check(finalA))
+                    .collect(Collectors.toSet());
+
+            boolean hasAllowedProperties = numberProperties.containsAll(containedProperties);
+            boolean hasIgnoredProperty = ignoredProperties.stream().anyMatch(numberProperties::contains);
+
+            if (hasAllowedProperties && !hasIgnoredProperty) {
+                String propertiesStr = numberProperties.stream()
+                        .map(property -> property.name().toLowerCase())
+                        .collect(Collectors.joining(", "));
+                System.out.println(a + " is " + propertiesStr);
+                counter++;
+            }
+
+            a++;
+        }
     }
 
     public static Stream<Property> stream() {
@@ -86,15 +72,16 @@ public enum Property {
     /**
      * if properties violates exclusive, returns violated properties
      */
-    public static List<List<Property>> validate(List<Property> properties) {
-        List<List<Property>> exclusiveProperties = List.of(
-                List.of(EVEN, ODD),
-                List.of(DUCK, SPY),
-                List.of(SUNNY, SQUARE)
+    public static Set<Set<Property>> validate(Set<Property> properties) {
+        Set<Set<Property>> exclusiveProperties = Set.of(
+                Set.of(EVEN, ODD),
+                Set.of(DUCK, SPY),
+                Set.of(SUNNY, SQUARE),
+                Set.of(SAD, HAPPY)
         );
         return exclusiveProperties.stream()
                 .filter(properties::containsAll)
-                .collect(Collectors.toList());
+                .collect(Collectors.toSet());
     }
 
 }
