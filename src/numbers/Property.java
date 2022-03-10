@@ -1,6 +1,8 @@
 package numbers;
 
 import java.util.Arrays;
+import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.LongStream;
 import java.util.stream.Stream;
@@ -11,14 +13,23 @@ public enum Property {
     DUCK(n -> String.valueOf(n).contains("0")),
     PALINDROMIC(n -> new StringBuilder(String.valueOf(n)).reverse().toString().equals(String.valueOf(n))),
     GAPFUL((n) -> {
-        String num = String.valueOf(n);
-        return num.length() >= 3 &&
-                n % Long.parseLong(num.charAt(0) + num.substring(num.length() - 1)) == 0;
+        String nStr = String.valueOf(n);
+        return nStr.length() >= 3 &&
+                n % Long.parseLong(nStr.charAt(0) + nStr.substring(nStr.length() - 1)) == 0;
     }),
     SPY(n -> {
-        int resultSum = String.valueOf(n).chars().reduce(0, (sum, v) -> sum + (v - '0'));
-        int resultProduct = String.valueOf(n).chars().reduce(1, (product, v) -> product * (v - '0'));
+        String nStr = String.valueOf(n);
+        int resultSum = nStr.chars().reduce(0, (sum, v) -> sum + (v - '0'));
+        int resultProduct = nStr.chars().reduce(1, (product, v) -> product * (v - '0'));
         return resultSum == resultProduct;
+    }),
+    SQUARE(n -> {
+        double square = Math.sqrt(n);
+        return square - Math.floor(square) == 0;
+    }),
+    SUNNY(n -> {
+        double square = Math.sqrt(n + 1L);
+        return square - Math.floor(square) == 0;
     }),
     EVEN(n -> n % 2L == 0L),
     ODD(n -> n % 2L != 0L);
@@ -30,7 +41,7 @@ public enum Property {
     }
 
     public void print(long a) {
-        System.out.println("    " + this.name().toLowerCase() + ": " + checker.check(a));
+        System.out.println(this.name().toLowerCase() + ": " + checker.check(a));
     }
 
     public static void print(long a, long b) {
@@ -43,13 +54,14 @@ public enum Property {
         System.out.println(result);
     }
 
-    public static void print(long a, long b, Property property) {
+    public static void print(long a, long b, List<Property> properties) {
         String result = LongStream.iterate(a, i -> i + 1)
                 .filter(n -> Property.stream()
                         .filter(p -> p.checker.check(n))
-                        .anyMatch(p -> p.equals(property)))
+                        .collect(Collectors.toList())
+                        .containsAll(properties))
                 .limit(b)
-                .mapToObj(n -> "        " + n + " is " + Property.stream()
+                .mapToObj(n -> n + " is " + Property.stream()
                         .filter(p -> p.checker.check(n))
                         .map(p -> p.name().toLowerCase())
                         .collect(Collectors.joining(", ")))
@@ -59,6 +71,26 @@ public enum Property {
 
     public static Stream<Property> stream() {
         return Arrays.stream(values());
+    }
+
+    /**
+     * if properties violates exclusive, returns violated properties
+     */
+    public static List<List<Property>> validate(List<Property> properties) {
+        List<List<Property>> exclusiveProperties = List.of(
+                List.of(EVEN, ODD),
+                List.of(DUCK, SPY),
+                List.of(SUNNY, SQUARE)
+        );
+        return exclusiveProperties.stream()
+                .map(exc -> {
+                    if (properties.containsAll(exc)) {
+                        return exc;
+                    }
+                    return null;
+                })
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
     }
 
 }
